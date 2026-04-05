@@ -47,106 +47,97 @@ const getGarbageType = (year, month, date) => {
     return null;
 };
 
-// DOM Elements
-const monthDisplay = document.getElementById('current-month-display');
-const daysContainer = document.getElementById('calendar-days');
-const prevBtn = document.getElementById('prev-btn');
-const nextBtn = document.getElementById('next-btn');
+// DOM Elements wrapping with jQuery
+let $monthDisplay;
+let $daysContainer;
+let $prevBtn;
+let $nextBtn;
 
 const updateCalendar = () => {
-    monthDisplay.textContent = `${currentYear}年 ${currentMonth}月`;
+    $monthDisplay.text(`${currentYear}年 ${currentMonth}月`);
 
     // Disable navigating out of the 2026 Fiscal Year
-    prevBtn.disabled = (currentYear === START_YEAR && currentMonth === START_MONTH);
-    nextBtn.disabled = (currentYear === END_YEAR && currentMonth === END_MONTH);
+    $prevBtn.prop('disabled', currentYear === START_YEAR && currentMonth === START_MONTH);
+    $nextBtn.prop('disabled', currentYear === END_YEAR && currentMonth === END_MONTH);
 
     // Render calendar dates
-    daysContainer.innerHTML = '';
+    $daysContainer.empty();
     const firstDay = new Date(currentYear, currentMonth - 1, 1).getDay();
     const daysInMonth = new Date(currentYear, currentMonth, 0).getDate();
 
     // Fill empty grid cells before the 1st of the month
     for (let i = 0; i < firstDay; i++) {
-        const emptyDiv = document.createElement('div');
-        emptyDiv.className = 'day empty';
-        daysContainer.appendChild(emptyDiv);
+        $daysContainer.append($('<div>').addClass('day empty'));
     }
 
     // Create daily cells
     for (let i = 1; i <= daysInMonth; i++) {
-        const dayDiv = document.createElement('div');
         const dStr = `${currentYear}-${String(currentMonth).padStart(2, '0')}-${String(i).padStart(2, '0')}`;
         const dateObj = new Date(currentYear, currentMonth - 1, i);
         const dayOfWeek = dateObj.getDay();
 
         // Start base class
-        dayDiv.className = 'day';
-        if (dayOfWeek === 0) dayDiv.classList.add('holiday');
-        if (dayOfWeek === 6) dayDiv.classList.add('saturday');
+        const $dayDiv = $('<div>').addClass('day');
+        if (dayOfWeek === 0) $dayDiv.addClass('holiday');
+        if (dayOfWeek === 6) $dayDiv.addClass('saturday');
 
         // Note: We style explicit REST DAYS as "holiday" in UI
         if (REST_DAYS.includes(dStr)) {
-            dayDiv.classList.add('holiday');
-            dayDiv.classList.remove('saturday');
+            $dayDiv.addClass('holiday').removeClass('saturday');
         }
 
         // Add date number
-        const dateNum = document.createElement('div');
-        dateNum.className = 'date-num';
-        dateNum.textContent = i;
-        dayDiv.appendChild(dateNum);
+        $dayDiv.append($('<div>').addClass('date-num').text(i));
 
         // Fetch category and present
         const garbage = getGarbageType(currentYear, currentMonth, i);
         if (garbage) {
             if (garbage.type === 'rest') {
-                const span = document.createElement('span');
-                span.className = 'rest-chip';
-                span.textContent = garbage.label;
-                dayDiv.appendChild(span);
+                $dayDiv.append($('<span>').addClass('rest-chip').text(garbage.label));
             } else {
-                const chip = document.createElement('div');
-                chip.className = `chip ${garbage.type}`;
-                chip.textContent = garbage.label;
-                dayDiv.appendChild(chip);
+                $dayDiv.append($('<div>').addClass(`chip ${garbage.type}`).text(garbage.label));
             }
         }
 
-        daysContainer.appendChild(dayDiv);
+        $daysContainer.append($dayDiv);
     }
 
     // Fill trailing empty slots for cleaner grid ending
     const totalCells = firstDay + daysInMonth;
     const remaining = totalCells % 7 === 0 ? 0 : 7 - (totalCells % 7);
     for (let i = 0; i < remaining; i++) {
-        const emptyDiv = document.createElement('div');
-        emptyDiv.className = 'day empty';
-        daysContainer.appendChild(emptyDiv);
+        $daysContainer.append($('<div>').addClass('day empty'));
     }
 };
 
-// Event Listeners for controls
-prevBtn.addEventListener('click', () => {
-    if (currentMonth === 1) {
-        currentMonth = 12;
-        currentYear--;
-    } else {
-        currentMonth--;
-    }
-    updateCalendar();
-});
-
-nextBtn.addEventListener('click', () => {
-    if (currentMonth === 12) {
-        currentMonth = 1;
-        currentYear++;
-    } else {
-        currentMonth++;
-    }
-    updateCalendar();
-});
-
 // Initialization
-document.addEventListener('DOMContentLoaded', () => {
+$(document).ready(() => {
+    // Initialize DOM variables
+    $monthDisplay = $('#current-month-display');
+    $daysContainer = $('#calendar-days');
+    $prevBtn = $('#prev-btn');
+    $nextBtn = $('#next-btn');
+
+    // Event Listeners for controls
+    $prevBtn.on('click', () => {
+        if (currentMonth === 1) {
+            currentMonth = 12;
+            currentYear--;
+        } else {
+            currentMonth--;
+        }
+        updateCalendar();
+    });
+
+    $nextBtn.on('click', () => {
+        if (currentMonth === 12) {
+            currentMonth = 1;
+            currentYear++;
+        } else {
+            currentMonth++;
+        }
+        updateCalendar();
+    });
+
     updateCalendar();
 });
