@@ -1,0 +1,11 @@
+{
+  "name": "trash-calendar",
+  "version": "1.0.0",
+  "description": "ごみ捨てカレンダー",
+  "main": "script.js",
+  "dependencies": {
+    "jquery": "^3.7.1"
+  },
+  "author": "Yusuke19760809",
+  "license": "MIT"
+}
